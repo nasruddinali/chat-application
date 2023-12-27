@@ -18,9 +18,11 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 //    List<Message> findBySenderAndReceiverOrReceiverAndSenderOrderByTimestamp(User sender, User receiver1, User receiver2, User sender1, Pageable pageable);
 
     @Query("SELECT m FROM Message m " +
-            "WHERE ( m.receiver = :receiver) " +
+            "WHERE ( m.receiver = :receiver AND m.seen = :seen) " +
             "ORDER BY m.timestamp DESC")
-    List<Message> findMessagesByReceiverOrderByTimestampDesc(@Param("receiver") User receiver);
+    List<Message> findMessagesByReceiverOrderByTimestampDesc(@Param("receiver") User receiver,
+                                                             @Param("seen") boolean seen);
+
 
 
 
