@@ -28,14 +28,12 @@ public class MessageController {
 
     @GetMapping("/user/{username}/message")
     public ResponseEntity<MessageFromSingleUserResponse> getChatHistory(@PathVariable String username,
-                                                                        @RequestParam(name = "friend",value = "friend",required = false) String friendUsername) {
+                                                                        @RequestParam(required = false) String friendUsername) {
 
         User receiver = userService.findUserByUsername(username);
-        friendUsername = "monu";
 
         MessageFromSingleUserResponse chatHistory = new MessageFromSingleUserResponse();
         if(friendUsername != null){
-            System.out.println("here---->");
             User friend = userService.findUserByUsername(friendUsername);
             chatHistory = messageService.getChatHistoryOfAUserWithFriend(friend,receiver);
         }

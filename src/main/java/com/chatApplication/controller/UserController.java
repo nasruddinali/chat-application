@@ -1,11 +1,10 @@
 package com.chatApplication.controller;
 
 
-import com.chatApplication.dto.AllUserResponse;
-import com.chatApplication.dto.UserCreateResponse;
-import com.chatApplication.dto.UserDto;
+import com.chatApplication.dto.*;
 import com.chatApplication.model.User;
 import com.chatApplication.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,12 +30,9 @@ public class UserController {
 
 
     @PostMapping("/user")
-    public ResponseEntity<UserCreateResponse> registerUser(@RequestBody UserDto userDto) {
+    public ResponseEntity<UserCreateResponse> registerUser(@RequestBody UserCreateRequest userDto) {
         try {
-            User user = new User().builder()
-                    .password(userDto.getPasscode())
-                    .username(userDto.getUsername()).build();
-            userService.registerUser(user);
+            userService.registerUser(userDto);
             UserCreateResponse response = new UserCreateResponse();
             response.setStatus("success");
             response.setMessage("User registered Successfully");
@@ -63,34 +59,11 @@ public class UserController {
         response.setStatus("success");
         return response;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestBody UserDto loginForm) {
-        return ResponseEntity.ok("Login successful for user: " + loginForm.getUsername());
+    @GetMapping("/login")
+    public ResponseEntity<UserAuthenticationResponse> loginUser(@RequestBody AuthenticationRequest loginForm) throws Exception {
+        UserAuthenticationResponse response =  userService.authenticate(loginForm);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
-
-
-
     @GetMapping("/{username}")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public User getUser(@PathVariable String username){
