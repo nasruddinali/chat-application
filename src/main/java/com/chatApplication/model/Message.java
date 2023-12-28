@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.sql.Timestamp;
 
@@ -31,9 +29,7 @@ public class Message {
     @ManyToOne
     @JoinColumn(name = "receiver_id")
     private User receiver;
-
     private String content;
-
     @Column(columnDefinition = "boolean default true")
     private boolean seen;
     @CreationTimestamp
