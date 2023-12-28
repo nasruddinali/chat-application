@@ -2,6 +2,8 @@ package com.chatApplication.controller;
 
 import com.chatApplication.dto.MessageFromSingleUserResponse;
 import com.chatApplication.dto.SendMessageDto;
+import com.chatApplication.exception.ActionNotAllowed;
+import com.chatApplication.exception.UserNotFound;
 import com.chatApplication.model.Message;
 import com.chatApplication.model.User;
 import com.chatApplication.service.MessageService;
@@ -15,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/message")
+@RequestMapping("/")
 @RequiredArgsConstructor
 public class MessageController {
 
@@ -27,21 +29,18 @@ public class MessageController {
 
 
     @GetMapping("/user/{username}/message")
-    public ResponseEntity<MessageFromSingleUserResponse> getChatHistory(@PathVariable String username,
-                                                                        @RequestParam(required = false) String friendUsername) {
-
-        User receiver = userService.findUserByUsername(username);
-
-        MessageFromSingleUserResponse chatHistory = new MessageFromSingleUserResponse();
-        if(friendUsername != null){
-            User friend = userService.findUserByUsername(friendUsername);
-            chatHistory = messageService.getChatHistoryOfAUserWithFriend(friend,receiver);
+    public ResponseEntity<MessageFromSingleUserResponse> getChatHistory(@CookieValue("chat-app-token") String token,
+                                                                        @PathVariable String username,
+                                                                        @RequestParam(required = false) String friendUsername) throws ActionNotAllowed, UserNotFound {
+        try {
+            MessageFromSingleUserResponse chatHistory = messageService.getMessagesOfAUser(friendUsername,  username,  token);
+            return new ResponseEntity<>(chatHistory, HttpStatus.OK);
         }
-        else
-            chatHistory = messageService.getChatHistoryOfAUser( receiver);
-        return new ResponseEntity<>(chatHistory, HttpStatus.OK);
-
+        catch (Exception e){
+            return ResponseEntity.badRequest().build();
+        }
     }
+
     @PostMapping("/send")
     public ResponseEntity<String> sendMessage(@RequestBody SendMessageDto msg,
                                               @CookieValue(name = "token") String token) {

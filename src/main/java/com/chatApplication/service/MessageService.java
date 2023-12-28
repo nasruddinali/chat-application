@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -34,7 +35,7 @@ public class MessageService {
         return messageRepository.findAll();
     }
 
-    public MessageFromSingleUserResponse getChatHistoryOfAUser(User receiver) {
+    private MessageFromSingleUserResponse getChatHistoryOfAUser(User receiver) {
         List<Message> messages =  messageRepository.findMessagesByReceiverOrderByTimestampDesc(receiver);
 
 
@@ -76,7 +77,7 @@ public class MessageService {
         return response;
     }
 
-    public MessageFromSingleUserResponse getChatHistoryOfAUserWithFriend(User sender, User receiver) {
+    private MessageFromSingleUserResponse getChatHistoryOfAUserWithFriend(User sender, User receiver) {
         List<Message> messages =  messageRepository.findMessagesBySenderAndReceiverOrderByTimestampDesc(sender,receiver);
         MessageFromSingleUserResponse response = new MessageFromSingleUserResponse();
 
@@ -142,4 +143,26 @@ public class MessageService {
 
     }
 
+    public boolean authenticateToken(String token, UserDetails user) throws UserNotFound {
+
+        return jwtUtil.isTokenValid(token,user);
+    }
+
+    public MessageFromSingleUserResponse getMessagesOfAUser(String sender, String receiver, String token) throws UserNotFound, ActionNotAllowed {
+        Optional<User> senderOptional = Optional.ofNullable(userService.findUserByUsername(sender));
+        Optional<User> receiverOptional = Optional.ofNullable(userService.findUserByUsername(receiver));
+
+        if(receiverOptional.isPresent() == false){
+            throw new UserNotFound("reveiver no found");
+        }
+        if(!jwtUtil.isTokenValid(token, receiverOptional.get())) {
+            throw new ActionNotAllowed("Action not allowed");
+        }
+       if(!senderOptional.isPresent()){
+           return getChatHistoryOfAUser(receiverOptional.get());
+       }
+       else {
+            return  getChatHistoryOfAUserWithFriend(senderOptional.get() , receiverOptional.get());
+        }
+    }
 }
