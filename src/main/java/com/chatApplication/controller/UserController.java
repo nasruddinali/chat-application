@@ -13,7 +13,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -30,18 +29,22 @@ public class UserController {
 
 
     @PostMapping("/user")
-    public ResponseEntity<UserCreateResponse> registerUser(@RequestBody UserCreateRequest userDto) {
+    public ResponseEntity<UserCreateResponse> registerUser(@RequestBody UserCreateRequest userDto,HttpServletResponse httpServletResponse) {
         try {
-            userService.registerUser(userDto);
-            UserCreateResponse response = new UserCreateResponse();
-            response.setStatus("success");
-            response.setMessage("User registered Successfully");
+            userService.registerUser(userDto,httpServletResponse);
+            UserCreateResponse response = UserCreateResponse.builder()
+                    .status("success")
+                    .message("User registered Successfully")
+                    .build();
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         }
         catch (Exception e){
-            UserCreateResponse response = new UserCreateResponse();
-            response.setStatus("failure");
-            response.setMessage("User already exist");
+            UserCreateResponse response = UserCreateResponse.builder()
+                    .status("failure")
+                    .message("User already exist")
+                    .build();
+
+
             return new ResponseEntity<>(response,HttpStatus.CONFLICT);
         }
     }
@@ -60,8 +63,8 @@ public class UserController {
         return response;
     }
     @GetMapping("/login")
-    public ResponseEntity<UserAuthenticationResponse> loginUser(@RequestBody AuthenticationRequest loginForm) throws Exception {
-        UserAuthenticationResponse response =  userService.authenticate(loginForm);
+    public ResponseEntity<?> loginUser(@RequestBody AuthenticationRequest loginForm, HttpServletResponse httpServletResponse) throws Exception {
+        var response =  userService.authenticate(loginForm,httpServletResponse);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
     @GetMapping("/{username}")
@@ -70,10 +73,6 @@ public class UserController {
         return userService.findUserByUsername(username);
     }
 
-
-
-
-//    return new ResponseEntity<>(message, HttpStatus.CREATED);
 
     @DeleteMapping("/{username}")
     public ResponseEntity<String> deleteUser(@PathVariable String username){
@@ -86,9 +85,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
     }
-
-//    @GetMapping("/current-user")
-//    public String getLoggedInUser(Principal principal) {
-//        return principal.getName();
-//    }
+    @GetMapping("/logout")
+    public void logout(HttpServletResponse httpServletResponse){
+    }
 }

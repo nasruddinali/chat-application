@@ -1,6 +1,8 @@
 package com.chatApplication.service;
 
+import com.chatApplication.config.JwtUtil;
 import com.chatApplication.dto.*;
+import com.chatApplication.exception.ActionNotAllowed;
 import com.chatApplication.exception.MessageContentNull;
 import com.chatApplication.exception.UserNotFound;
 import com.chatApplication.model.Message;
@@ -9,6 +11,8 @@ import com.chatApplication.repository.MessageRepository;
 import com.chatApplication.util.Utils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -20,6 +24,8 @@ public class MessageService {
 
     @Autowired
     private final MessageRepository messageRepository;
+
+    private final JwtUtil jwtUtil;
 
     @Autowired
     private final UserService userService;
@@ -37,7 +43,10 @@ public class MessageService {
 
         List<String> messagesFromReceiver = new ArrayList<>();
         for(int i = 0 ; i < messages.size() ; i++) {
-            Utils.extractSenderAndMessage(hash,messages.get(i));
+            Message message = messages.get(i);
+            Utils.extractSenderAndMessage(hash,message);
+            message.setSeen(true);
+            messageRepository.save(message);
         }
 
         MessageFromSingleUserResponse response = new MessageFromSingleUserResponse();
@@ -69,17 +78,11 @@ public class MessageService {
 
     public MessageFromSingleUserResponse getChatHistoryOfAUserWithFriend(User sender, User receiver) {
         List<Message> messages =  messageRepository.findMessagesBySenderAndReceiverOrderByTimestampDesc(sender,receiver);
-
-//        messages.forEach(message ->System.out.println(message.getSender().getUsername()+"    " + message.getReceiver().getUsername()));
-
         MessageFromSingleUserResponse response = new MessageFromSingleUserResponse();
 
         response.setData(new ArrayList<>());
 
-//        ConversationResponse conversationResponse = new ConversationResponse();
         for(int i = 0 ; i < messages.size() ; i++) {
-
-
             Message  message = messages.get(i);
             String senderUserName = message.getSender().getUsername();
             String receiverUserName = message.getReceiver().getUsername();
@@ -98,25 +101,45 @@ public class MessageService {
         return response;
     }
 
-    public Message sendMessage(String senderUsername, String receiverUsername, String content) throws MessageContentNull, UserNotFound {
+    public ResponseEntity<?> sendMessage(SendMessageDto msg, String token) throws MessageContentNull, UserNotFound, ActionNotAllowed {
+        String content = msg.getText();
+        String senderUsername = msg.getSender();
+        String receiverUsername = msg.getReceiver();
         if(content == null){
             throw new MessageContentNull("Message can not be empty");
+        }
+        if(senderUsername == null){
+            throw new UserNotFound("sender username Not found");
+        }
+
+        if(receiverUsername == null){
+            throw new UserNotFound("receiver username Not found");
         }
         User sender = userService.findUserByUsername(senderUsername);
         User receiver = userService.findUserByUsername(receiverUsername);
 
-        if(sender == null){
+        if(senderUsername == null){
             throw new UserNotFound("sender Not found");
+
         }
 
-        if(receiver == null){
-            throw new UserNotFound("receiver Not found");
+        if(receiverUsername == null){
+            throw new UserNotFound("receiver username Not found");
+        }
+
+
+        var x = jwtUtil.extractUsername(token);
+        boolean isValid = jwtUtil.isTokenValid(token,sender);
+        if(isValid == false) {
+             throw new ActionNotAllowed("you are not allowed");
         }
         Message message = new Message();
         message.setSender(sender);
         message.setReceiver(receiver);
         message.setContent(content);
-        return messageRepository.save(message);
+        messageRepository.save(message);
+        return new ResponseEntity<>("Success", HttpStatus.OK);
+
     }
 
 }

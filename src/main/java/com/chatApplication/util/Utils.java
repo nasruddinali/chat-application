@@ -1,7 +1,6 @@
 package com.chatApplication.util;
 
 import com.chatApplication.model.Message;
-
 import java.util.*;
 
 public class Utils {
@@ -11,7 +10,6 @@ public class Utils {
         List<String> messagesFromReceiver = new ArrayList<>();
         if(hashMap.containsKey(sender)) {
              messagesFromReceiver = hashMap.get(sender);
-
         }
         else {
             messagesFromReceiver.add(content);

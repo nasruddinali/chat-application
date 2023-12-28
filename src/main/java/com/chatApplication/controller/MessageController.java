@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/")
+@RequestMapping("/message")
 @RequiredArgsConstructor
 public class MessageController {
 
@@ -43,12 +43,13 @@ public class MessageController {
 
     }
     @PostMapping("/send")
-    public ResponseEntity<String> sendMessage(@RequestBody SendMessageDto msg) {
+    public ResponseEntity<String> sendMessage(@RequestBody SendMessageDto msg,
+                                              @CookieValue(name = "token") String token) {
         try {
             String sender = msg.getSender();
             String receiver = msg.getReceiver();
             String content = msg.getText();
-            Message message = messageService.sendMessage(sender, receiver, content);
+            messageService.sendMessage(msg,token);
             return new ResponseEntity<>("Success", HttpStatus.ACCEPTED);
         } catch (Exception e) {
             System.out.println(e);
