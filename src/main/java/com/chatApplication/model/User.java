@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 
 @Entity
-@Table(name = "t_user")
+@Table(name = "user")
 @Getter
 @Setter
 @NoArgsConstructor

@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 
 
 @Entity
-@Table(name= "t_message")
+@Table(name= "message")
 @Getter
 @Setter
 @NoArgsConstructor
