@@ -1,7 +1,14 @@
+<<<<<<< HEAD
 
 FROM maven:3.9.3 AS builder
 WORKDIR /chat-application
 COPY . /chat-application/
+=======
+# 1st Docker build stage: build the project with Maven
+FROM maven:3.9.3 AS builder
+WORKDIR /chat-application
+COPY src /chat-application/
+>>>>>>> bcb6b5aead3a9b654734b7d8e366edf6e5cea05a
 RUN mvn clean package -DskipTests -e
 
 # 2nd Docker build stage: copy builder output and configure entry point
@@ -12,6 +19,12 @@ ENV APP_FILE chat-application-jar.jar
 EXPOSE 8080
 
 WORKDIR $APP_DIR
+<<<<<<< HEAD
 COPY --from=builder /chat-application/target/*.jar $APP_DIR/$APP_FILE
 
 ENTRYPOINT ["sh", "-c","java $JAVA_OPTS -jar $APP_FILE"]
+=======
+COPY --from=builder /chatApplication/target/*.jar $APP_DIR/$APP_FILE
+
+ENTRYPOINT ["sh", "-c","java $JAVA_OPTS -jar $APP_FILE"]
+>>>>>>> bcb6b5aead3a9b654734b7d8e366edf6e5cea05a
